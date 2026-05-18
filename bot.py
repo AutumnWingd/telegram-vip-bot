@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import (
     Message,
@@ -11,6 +12,7 @@ from aiogram.types import (
 )
 
 TOKEN = os.getenv("BOT_TOKEN")
+PORT = int(os.environ.get("PORT", 10000))
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -37,7 +39,7 @@ async def start(message: Message):
 💎 VIP 月卡
 🔥 SVIP 月卡
 
-付款后联系客服审核。
+付款后联系管理员。
 """,
         reply_markup=main_keyboard
     )
@@ -73,8 +75,22 @@ async def me(callback: CallbackQuery):
     await callback.message.answer("你当前暂无会员")
 
 
+async def health(request):
+    return web.Response(text="Bot is running")
+
+
 async def main():
     print("Bot running...")
+
+    app = web.Application()
+    app.router.add_get("/", health)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+
     await dp.start_polling(bot)
 
 

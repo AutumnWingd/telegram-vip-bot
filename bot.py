@@ -29,7 +29,7 @@ main_keyboard = InlineKeyboardMarkup(
 @dp.message(F.text == "/start")
 async def start(message: Message):
 
-    photo = FSInputFile("vip.jpg")
+    photo = FSInputFile("image.jpg")
 
     await message.answer_photo(
         photo=photo,

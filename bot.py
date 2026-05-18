@@ -1,35 +1,57 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-)
-
+import asyncio
 import os
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    FSInputFile
+)
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print(update.effective_chat.id)
-    keyboard = [
-        [InlineKeyboardButton("购买会员", callback_data="buy")]
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+
+main_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="💎 开通会员", callback_data="vip")],
+        [InlineKeyboardButton(text="👤 我的会员", callback_data="me")],
     ]
+)
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        "欢迎使用会员机器人",
-        reply_markup=reply_markup
+@dp.message(F.text == "/start")
+async def start(message: Message):
+
+    photo = FSInputFile("vip.jpg")
+
+    await message.answer_photo(
+        photo=photo,
+        caption="""
+🏠 欢迎来到会员商店
+
+💎 VIP 月卡
+🔥 SVIP 月卡
+
+付款后联系客服审核。
+""",
+        reply_markup=main_keyboard
     )
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
 
-    if query.data == "buy":
-        text = '''
-请选择付款方式：
+@dp.callback_query(F.data == "vip")
+async def vip(callback: CallbackQuery):
+
+    text = """
+💎 VIP 月卡：88
+
+🔥 SVIP 月卡：188
+
+付款方式：
 
 支付宝：
 你的支付宝
@@ -40,16 +62,21 @@ USDT(TRC20)：
 银行卡：
 你的银行卡
 
-付款后联系客服。
-'''
+付款后联系管理员。
+"""
 
-        await query.message.reply_text(text)
+    await callback.message.answer(text)
 
-app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(button))
+@dp.callback_query(F.data == "me")
+async def me(callback: CallbackQuery):
+    await callback.message.answer("你当前暂无会员")
 
-print("Bot running...")
 
-app.run_polling()
+async def main():
+    print("Bot running...")
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

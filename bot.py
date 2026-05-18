@@ -11,6 +11,7 @@ import os
 TOKEN = os.getenv("BOT_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(update.effective_chat.id)
     keyboard = [
         [InlineKeyboardButton("购买会员", callback_data="buy")]
     ]
